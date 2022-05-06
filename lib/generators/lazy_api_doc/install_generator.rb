@@ -1,4 +1,5 @@
 require 'rails/generators'
+require 'lazy_api_doc'
 
 module LazyApiDoc
   module Generators
@@ -7,8 +8,17 @@ module LazyApiDoc
 
       desc "Copy base configuration for LazyApiDoc"
       def install
-        copy_file 'public/index.html', 'public/lazy_api_doc/index.html'
-        copy_file 'public/layout.yml', 'public/lazy_api_doc/layout.yml'
+        copy_file 'public/index.html', "#{LazyApiDoc.path}/index.html"
+        copy_file 'public/layout.yml', "#{LazyApiDoc.path}/layout.yml"
+
+        append_to_file '.gitignore' do
+          <<~TXT
+
+          # LazyApiDoc
+          #{LazyApiDoc.path}/api.yml
+          #{LazyApiDoc.path}/examples/*.json
+          TXT
+        end
 
         install_rspec if Dir.exist?('spec')
 
@@ -21,18 +31,27 @@ module LazyApiDoc
         copy_file 'support/rspec_interceptor.rb', 'spec/support/lazy_api_doc_interceptor.rb'
 
         insert_into_file 'spec/rails_helper.rb', after: "RSpec.configure do |config|\n" do
-          <<~RUBY
-            if ENV['DOC']
-              require 'lazy_api_doc'
-              require 'support/lazy_api_doc_interceptor'
+          <<-RUBY
+  if ENV['LAZY_API_DOC']
+    require 'lazy_api_doc'
+    require 'support/lazy_api_doc_interceptor'
 
-              config.include LazyApiDocInterceptor, type: :request
-              config.include LazyApiDocInterceptor, type: :controller
+    config.include LazyApiDocInterceptor, type: :request
+    config.include LazyApiDocInterceptor, type: :controller
 
-              config.after(:suite) do
-                LazyApiDoc.save_result
-              end
-            end
+    config.after(:suite) do
+      # begin: Handle ParallelTests
+      # This peace of code handle using ParallelTests (tests runs in independent processes).
+      # Just delete this block if you don't use ParallelTests
+      if ENV['TEST_ENV_NUMBER'] && defined?(ParallelTests)
+        LazyApiDoc.save_examples
+        ParallelTests.wait_for_other_processes_to_finish if ParallelTests.first_process?
+        LazyApiDoc.load_examples
+      end
+      # end: Handle ParallelTests
+      LazyApiDoc.generate_documentation
+    end
+  end
           RUBY
         end
       end
@@ -43,7 +62,7 @@ module LazyApiDoc
         append_to_file 'test/test_helper.rb' do
           <<~RUBY
 
-            if ENV['DOC']
+            if ENV['LAZY_API_DOC']
               require 'lazy_api_doc'
               require 'support/lazy_api_doc_interceptor'
 
@@ -52,7 +71,16 @@ module LazyApiDoc
               end
 
               Minitest.after_run do
-                LazyApiDoc.save_result
+                # begin: Handle ParallelTests
+                # This peace of code handle using ParallelTests (tests runs in independent processes).
+                # Just delete this block if you don't use ParallelTests
+                if ENV['TEST_ENV_NUMBER'] && defined?(ParallelTests)
+                  LazyApiDoc.save_examples
+                  ParallelTests.wait_for_other_processes_to_finish if ParallelTests.first_process?
+                  LazyApiDoc.load_examples
+                end
+                # end: Handle ParallelTests
+                LazyApiDoc.generate_documentation
               end
             end
           RUBY
