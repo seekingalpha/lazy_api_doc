@@ -32,16 +32,16 @@ module LazyApiDoc
 
     def add_spec(rspec_example) # rubocop:disable Metrics/AbcSize
       add(
-        'controller' => rspec_example.request.params[:controller],
-        'action' => rspec_example.request.params[:action],
+        'controller' => rspec_example.instance_variable_get(:@request).params[:controller],
+        'action' => rspec_example.instance_variable_get(:@request).params[:action],
         'description' => rspec_example.class.description,
         'source_location' => [rspec_example.class.metadata[:file_path], rspec_example.class.metadata[:line_number]],
-        'verb' => rspec_example.request.method,
-        'params' => rspec_example.request.params,
-        'content_type' => rspec_example.request.content_type.to_s,
+        'verb' => rspec_example.instance_variable_get(:@request).method,
+        'params' => rspec_example.instance_variable_get(:@request).params,
+        'content_type' => rspec_example.instance_variable_get(:@request).content_type.to_s,
         'request' => {
-          'query_params' => rspec_example.request.query_parameters,
-          'full_path' => rspec_example.request.fullpath
+          'query_params' => rspec_example.instance_variable_get(:@request).query_parameters,
+          'full_path' => rspec_example.instance_variable_get(:@request).fullpath
         },
         'response' => {
           'code' => rspec_example.response.status,
@@ -53,16 +53,16 @@ module LazyApiDoc
 
     def add_test(mini_test_example) # rubocop:disable Metrics/AbcSize
       add(
-        'controller' => mini_test_example.request.params[:controller],
-        'action' => mini_test_example.request.params[:action],
+        'controller' => mini_test_example.instance_variable_get(:@request).params[:controller],
+        'action' => mini_test_example.instance_variable_get(:@request).params[:action],
         'description' => mini_test_example.name.gsub(/\Atest_/, '').humanize,
         'source_location' => mini_test_example.method(mini_test_example.name).source_location,
-        'verb' => mini_test_example.request.method,
-        'params' => mini_test_example.request.params,
-        'content_type' => mini_test_example.request.content_type.to_s,
+        'verb' => mini_test_example.instance_variable_get(:@request).method,
+        'params' => mini_test_example.instance_variable_get(:@request).params,
+        'content_type' => mini_test_example.instance_variable_get(:@request).content_type.to_s,
         'request' => {
-          'query_params' => mini_test_example.request.query_parameters,
-          'full_path' => mini_test_example.request.fullpath
+          'query_params' => mini_test_example.instance_variable_get(:@request).query_parameters,
+          'full_path' => mini_test_example.instance_variable_get(:@request).fullpath
         },
         'response' => {
           'code' => mini_test_example.response.status,
