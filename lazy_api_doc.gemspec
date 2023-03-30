@@ -7,7 +7,9 @@ Gem::Specification.new do |spec|
   spec.email         = ["biguban@gmail.com"]
 
   spec.summary       = "Creates openapi v3 documentation based on rspec request tests"
-  spec.description   = "The gem collects all requests and responses from your request specs and generates documentationbased on it"
+  spec.description   = <<~EODOC
+    The gem collects all requests and responses from your request specs and generates documentation based on it
+  EODOC
   spec.homepage      = "https://github.com/bguban/lazy_api_doc"
   spec.license       = "MIT"
   spec.required_ruby_version = Gem::Requirement.new(">= 2.3.0")
@@ -26,4 +28,5 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  spec.metadata['rubygems_mfa_required'] = 'true'
 end
